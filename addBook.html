@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add a Book | BookSwap</title>
+    <link rel="stylesheet" href="addBook.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <h1>📚 Add a New Book</h1>
+        <p>Share your book with the community!</p>
+
+        <!-- Book Entry Form -->
+        <form id="addBookForm">
+            <label for="bookName">Book Name:</label>
+            <input type="text" id="bookName" name="bookName" placeholder="Enter the book name" required>
+
+            <label>Book Genre:</label>
+            <div class="genre-container">
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Fiction</button>
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Non-Fiction</button>
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Sci-Fi</button>
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Mystery</button>
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Romance</button>
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Biography</button>
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Self-Help</button>
+                <button type="button" class="genre-btn" onclick="selectGenre(this)">Fantasy</button>
+            </div>
+            <input type="hidden" id="selectedGenre" name="selectedGenre">
+
+            <label for="authorName">Author Name:</label>
+            <input type="text" id="authorName" name="authorName" placeholder="Enter author's name" required>
+
+            <label for="description">Book Description:</label>
+            <textarea id="description" name="description" rows="4" placeholder="Write a short description about the book..." required></textarea>
+
+            <label for="bookCover">Upload Book Cover:</label>
+            <input type="file" id="bookCover" name="bookCover" accept="image/*">
+
+            <button type="submit">➕ Add Book</button>
+        </form>
+
+        <button class="back-btn" onclick="goBack()">⬅ Back to Welcome</button>
+    </div>
+
+    <script type="module">
+        // Form submission and Firebase Firestore integration
+        document.getElementById("addBookForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            // Collect form data
+            const book = {
+                title: document.getElementById("bookName").value,
+                author: document.getElementById("authorName").value,
+                genre: document.getElementById("selectedGenre").value,
+                description: document.getElementById("description").value,
+                image: document.getElementById("bookCover").files[0] ? await uploadImageToFirebase() : ''
+            };
+
+            // Add book to Firebase Firestore
+            await window.addFirestoreDoc(window.firestoreCollection(window.db, "books"), book);
+
+            alert("Book added successfully!");
+            window.location.href = "index.html";
+        });
+
+        // Image upload function (Firebase Storage)
+        async function uploadImageToFirebase() {
+            const file = document.getElementById("bookCover").files[0];
+            const storageRef = window.firebase.storage().ref();
+            const fileRef = storageRef.child(`bookCovers/${file.name}`);
+            await fileRef.put(file);
+            return await fileRef.getDownloadURL(); // Get the URL of the uploaded image
+        }
+
+        // Genre selection logic
+        function selectGenre(button) {
+            const selectedGenre = button.textContent;
+            document.getElementById("selectedGenre").value = selectedGenre;
+            const genreButtons = document.querySelectorAll('.genre-btn');
+            genreButtons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        }
+
+        // Go back function (optional, can be defined as per your routing)
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+    <script src="addBook.js"></script>
+</body>
+</html>
